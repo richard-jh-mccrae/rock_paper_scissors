@@ -1,6 +1,5 @@
 """Run with python rps_gui.py to play the online bot and save each round."""
 
-import csv
 from pathlib import Path
 from queue import Empty, Queue
 from threading import Event, Thread
@@ -10,50 +9,14 @@ import webbrowser
 
 from PIL import Image, ImageOps, ImageTk
 
-from rps_bots import EssentiallyBot, GAME_URL, Move
+from rps_bots import EssentiallyBot, GAME_URL, Move, append_result_csv, prepare_results_csv
 
 
-CSV_COLUMNS = ("trial", "human_choice", "computer_choice", "result")
 IMAGE_FILES = {
     Move.ROCK: "rock.jpg",
     Move.PAPER: "paper.jpg",
     Move.SCISSORS: "scis.jpg",
 }
-
-
-def ensure_results_file(path):
-    """Check the CSV and return the next trial number."""
-    path = Path(path)
-    if path.exists() and path.stat().st_size:
-        with path.open("r", newline="", encoding="utf-8") as file:
-            reader = csv.DictReader(file)
-            if reader.fieldnames != list(CSV_COLUMNS):
-                raise ValueError("This CSV needs trial, human_choice, computer_choice, result columns.")
-            last_trial = 0
-            for row in reader:
-                try:
-                    trial = int(row["trial"])
-                except (TypeError, ValueError) as error:
-                    raise ValueError("This CSV has an invalid trial number.") from error
-                if trial <= last_trial:
-                    raise ValueError("Trial numbers in this CSV must increase.")
-                last_trial = trial
-        return last_trial + 1
-
-    with path.open("a", newline="", encoding="utf-8") as file:
-        csv.writer(file).writerow(CSV_COLUMNS)
-    return 1
-
-
-def append_result(path, result):
-    """Add one played round to the CSV."""
-    path = Path(path)
-    trial = ensure_results_file(path)
-    with path.open("a", newline="", encoding="utf-8") as file:
-        csv.writer(file).writerow(
-            (trial, result.player_move.value, result.computer_move.value, result.outcome)
-        )
-    return trial
 
 
 class RpsApp:
@@ -197,7 +160,7 @@ class RpsApp:
             return
         try:
             path = self.selected_path()
-            ensure_results_file(path)
+            prepare_results_csv(path)
         except (OSError, ValueError) as error:
             messagebox.showerror("Results CSV", str(error), parent=self.root)
             return
@@ -249,13 +212,13 @@ class RpsApp:
             return
         try:
             path = path or self.selected_path()
-            trial = append_result(path, self.pending)
+            append_result_csv(path, self.pending)
         except (OSError, ValueError) as error:
             self.result_text.set(self.result_text.get() + " Round not saved yet.")
             messagebox.showerror("Could not save round", str(error), parent=self.root)
         else:
             self.pending = None
-            self.result_text.set(self.result_text.get() + f" Saved as trial {trial}.")
+            self.result_text.set(self.result_text.get() + " Saved to CSV.")
         self.update_buttons()
 
     def update_buttons(self):
