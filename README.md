@@ -11,8 +11,9 @@ print(result.player_move.value, result.computer_move.value, result.outcome)
 print(bot.score)
 ```
 
-Use `Move.ROCK`, `Move.PAPER`, or `Move.SCISSORS`. Each call to `play` keeps the
-same online game session. `result.number` gives the round number, and
+Pass `Move.ROCK`, `Move.PAPER`, or `Move.SCISSORS` to `play`; strings and numbers
+are not accepted. Each call to `play` keeps the same online game session.
+`result.number` gives the round number, and
 `bot.reset()` starts a new game.
 
 ## GUI

@@ -18,19 +18,6 @@ class Move(str, Enum):
     SCISSORS = "scissors"
 
 
-ROCK = Move.ROCK
-PAPER = Move.PAPER
-SCISSORS = Move.SCISSORS
-
-_MOVES = {
-    0: Move.ROCK,
-    1: Move.PAPER,
-    2: Move.SCISSORS,
-    "rock": Move.ROCK,
-    "paper": Move.PAPER,
-    "scissor": Move.SCISSORS,
-    "scissors": Move.SCISSORS,
-}
 _BUTTON_NAMES = {Move.ROCK: "rock", Move.PAPER: "paper", Move.SCISSORS: "scissor"}
 _PLAYER_IMAGES = {"rock.jpg": Move.ROCK, "paper.jpg": Move.PAPER, "scis.jpg": Move.SCISSORS}
 _COMPUTER_IMAGES = {
@@ -139,23 +126,18 @@ class EssentiallyBot:
         self._history.clear()
         return self
 
-    def play(self, move):
-        """Play a Move, a move name, or 0, 1, 2."""
-        if isinstance(move, bool):
-            raise ValueError("Use ROCK, PAPER, or SCISSORS.")
-        key = move.strip().lower() if isinstance(move, str) else move
-        try:
-            player_move = _MOVES[key]
-        except (KeyError, TypeError):
-            raise ValueError("Use ROCK, PAPER, or SCISSORS.") from None
+    def play(self, move: Move):
+        """Play one of the Move values."""
+        if not isinstance(move, Move):
+            raise TypeError("Use Move.ROCK, Move.PAPER, or Move.SCISSORS.")
 
         if self._opener is None:
             self.reset()
-        button = _BUTTON_NAMES[player_move]
+        button = _BUTTON_NAMES[move]
         data = urlencode({f"{button}.x": 40, f"{button}.y": 40}).encode("ascii")
         html = self._get_page(self._opener, data)
-        computer_move, outcome = _read_round(html, player_move)
-        result = RoundResult(len(self._history) + 1, player_move, computer_move, outcome)
+        computer_move, outcome = _read_round(html, move)
+        result = RoundResult(len(self._history) + 1, move, computer_move, outcome)
         self._history.append(result)
         return result
 
